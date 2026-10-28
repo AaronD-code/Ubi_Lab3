@@ -20,6 +20,9 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
+
 
 
 
@@ -173,10 +176,23 @@ public class MotionService extends Service implements SensorEventListener {
             builder.setPriority(Notification.PRIORITY_HIGH);
         }
 
+        Intent detailsIntent = new Intent(this, MotionDetailsActivity.class);
+        detailsIntent.putExtra("motionTime", motionTime);
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addNextIntentWithParentStack(detailsIntent);
+
+        PendingIntent pendingIntent = stackBuilder.getPendingIntent(
+                notificationId,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+
         Notification notification = builder
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentTitle("Motion Detected!")
                 .setContentText("Movement detected at " + motionTime)
+                .setContentIntent(pendingIntent)
                 .setAutoCancel(true)
                 .build();
 

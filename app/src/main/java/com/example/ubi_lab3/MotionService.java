@@ -11,6 +11,10 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.util.Log;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 
 public class MotionService extends Service implements SensorEventListener {
 
@@ -82,13 +86,22 @@ public class MotionService extends Service implements SensorEventListener {
 
         long currentTime = System.currentTimeMillis();
 
+
         if (change > THRESHOLD &&
                 currentTime - lastMotionTime > 3000) {
 
             lastMotionTime = currentTime;
 
-            Log.d(TAG, "MOTION DETECTED! Change: " + change);
+            String motionTime = new SimpleDateFormat(
+                    "dd/MM/yyyy HH:mm:ss",
+                    Locale.getDefault()
+            ).format(new Date(currentTime));
+
+            Log.d(TAG, "MOTION DETECTED!");
+            Log.d(TAG, "Time: " + motionTime);
+            Log.d(TAG, "Movement strength: " + change);
         }
+
 
         lastX = x;
         lastY = y;

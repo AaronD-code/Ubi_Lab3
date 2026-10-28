@@ -14,11 +14,21 @@ import android.util.Log;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.pm.PackageManager;
+import android.os.Build;
+
 
 
 public class MotionService extends Service implements SensorEventListener {
 
     private static final String TAG = "MotionService";
+    private static final String CHANNEL_ID = "motion_alerts";
+    private int notificationId = 1;
+
     private static final float THRESHOLD = 2.5f;
 
     private SensorManager sensorManager;
@@ -32,6 +42,7 @@ public class MotionService extends Service implements SensorEventListener {
     @Override
     public void onCreate() {
         super.onCreate();
+        createNotificationChannel();
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(
@@ -100,6 +111,7 @@ public class MotionService extends Service implements SensorEventListener {
             Log.d(TAG, "MOTION DETECTED!");
             Log.d(TAG, "Time: " + motionTime);
             Log.d(TAG, "Movement strength: " + change);
+            sendMotionNotification(motionTime);
         }
 
 
@@ -125,4 +137,55 @@ public class MotionService extends Service implements SensorEventListener {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Motion Alerts",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+
+            channel.setDescription("Notifications when movement is detected");
+
+            NotificationManager manager =
+                    getSystemService(NotificationManager.class);
+
+            manager.createNotificationChannel(channel);
+        }
+    }
+
+    private void sendMotionNotification(String motionTime) {
+
+        if (Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "Notification permission not granted");
+            return;
+        }
+
+        Notification.Builder builder;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(this, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(this);
+            builder.setPriority(Notification.PRIORITY_HIGH);
+        }
+
+        Notification notification = builder
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("Motion Detected!")
+                .setContentText("Movement detected at " + motionTime)
+                .setAutoCancel(true)
+                .build();
+
+        NotificationManager manager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        manager.notify(notificationId++, notification);
+
+        Log.d(TAG, "Notification sent: " + motionTime);
+    }
+
 }

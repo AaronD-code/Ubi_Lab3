@@ -17,6 +17,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+
+            requestPermissions(
+                    new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                    100
+            );
+        }
+
+
         statusText = findViewById(R.id.statusText);
         startButton = findViewById(R.id.startButton);
         stopButton = findViewById(R.id.stopButton);
